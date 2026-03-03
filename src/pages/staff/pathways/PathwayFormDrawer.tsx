@@ -129,7 +129,7 @@ export default function PathwayFormDrawer({
   return (
     <Drawer
       title={isEdit ? 'Edit Pathway' : 'Create Pathway'}
-      width={720}
+      size={720}
       open={visible}
       onClose={onClose}
       footer={
