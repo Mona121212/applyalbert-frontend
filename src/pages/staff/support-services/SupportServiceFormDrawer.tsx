@@ -143,7 +143,7 @@ export default function SupportServiceFormDrawer({
   return (
     <Drawer
       title={isEdit ? 'Edit Support Service' : 'Create Support Service'}
-      width={720}
+      size={720}
       open={visible}
       onClose={onClose}
       footer={
