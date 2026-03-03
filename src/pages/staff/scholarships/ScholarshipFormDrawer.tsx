@@ -151,7 +151,7 @@ export default function ScholarshipFormDrawer({
   return (
     <Drawer
       title={isEdit ? 'Edit Scholarship' : 'Create Scholarship'}
-      width={720}
+      size={720}
       open={visible}
       onClose={onClose}
       footer={
