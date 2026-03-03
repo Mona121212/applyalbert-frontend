@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { LoginResponse } from '../types/auth';
 import { parseJwt } from '../utils/token';
 
@@ -50,45 +51,60 @@ const initialState: AuthState = {
 };
 
 /**
- * Authentication store using Zustand
+ * Authentication store using Zustand with persistence
  * Stores: accessToken, refreshToken, role, institutionId, userId
- * Must be set after successful login
+ * Persists to localStorage for page refresh recovery
  */
-export const useAuthStore = create<AuthStore>((set, get) => ({
-  ...initialState,
+export const useAuthStore = create<AuthStore>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
 
-  setAuth: (loginResponse: LoginResponse) => {
-    try {
-      // Parse JWT token to extract institutionId and verify claims
-      const payload = parseJwt(loginResponse.token);
+      setAuth: (loginResponse: LoginResponse) => {
+        try {
+          // Parse JWT token to extract institutionId and verify claims
+          const payload = parseJwt(loginResponse.token);
 
-      // Set all authentication data
-      set({
-        accessToken: loginResponse.token,
-        refreshToken: loginResponse.refreshToken || null,
-        role: loginResponse.role || payload.role,
-        institutionId: payload.institutionId || null,
-        userId: loginResponse.userId || payload.sub,
-      });
-    } catch (error) {
-      console.error('Failed to parse JWT token during login:', error);
-      // Still set basic auth data even if parsing fails
-      set({
-        accessToken: loginResponse.token,
-        refreshToken: loginResponse.refreshToken || null,
-        role: loginResponse.role,
-        institutionId: null,
-        userId: loginResponse.userId,
-      });
+          // Set all authentication data
+          set({
+            accessToken: loginResponse.token,
+            refreshToken: loginResponse.refreshToken || null,
+            role: loginResponse.role || payload.role,
+            institutionId: payload.institutionId || null,
+            userId: loginResponse.userId || payload.sub,
+          });
+        } catch (error) {
+          console.error('Failed to parse JWT token during login:', error);
+          // Still set basic auth data even if parsing fails
+          set({
+            accessToken: loginResponse.token,
+            refreshToken: loginResponse.refreshToken || null,
+            role: loginResponse.role,
+            institutionId: null,
+            userId: loginResponse.userId,
+          });
+        }
+      },
+
+      logout: () => {
+        set(initialState);
+      },
+
+      isAuthenticated: () => {
+        const state = get();
+        return state.accessToken !== null && state.userId !== null;
+      },
+    }),
+    {
+      name: 'auth-storage', // localStorage key
+      // Only persist sensitive tokens and user info
+      partialize: (state) => ({
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        role: state.role,
+        institutionId: state.institutionId,
+        userId: state.userId,
+      }),
     }
-  },
-
-  logout: () => {
-    set(initialState);
-  },
-
-  isAuthenticated: () => {
-    const state = get();
-    return state.accessToken !== null && state.userId !== null;
-  },
-}));
+  )
+);
