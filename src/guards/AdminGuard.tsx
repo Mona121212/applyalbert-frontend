@@ -13,10 +13,10 @@ interface AdminGuardProps {
  * 
  * Checks:
  * 1. Authentication (via AuthGuard - checks accessToken and expiration)
- * 2. role === SUPER_ADMIN
+ * 2. role === ADMIN (backend returns "ADMIN", not "SUPER_ADMIN")
  * 
  * If not authenticated → redirects to /login
- * If authenticated but not SUPER_ADMIN (e.g., STAFF) → shows 403
+ * If authenticated but not ADMIN (e.g., STAFF) → shows 403
  */
 export default function AdminGuard({ children }: AdminGuardProps) {
   // First check authentication and token expiration via AuthGuard
@@ -35,13 +35,14 @@ function AdminRoleCheck({ children }: AdminGuardProps) {
   const { role } = useAuthStore();
   const normalizedRole = role?.toUpperCase();
   
-  if (normalizedRole !== 'SUPER_ADMIN') {
+  // Backend returns "ADMIN" (not "SUPER_ADMIN")
+  if (normalizedRole !== 'ADMIN') {
     // Not an admin - show 403 Forbidden
     // STAFF accessing /admin → 403
     // Unknown role → 403
     return <ForbiddenPage />;
   }
 
-  // User is authenticated and is SUPER_ADMIN, render children
+  // User is authenticated and is ADMIN, render children
   return <>{children}</>;
 }
