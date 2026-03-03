@@ -25,7 +25,6 @@ import ProgramListPage from './pages/staff/programs/ProgramListPage';
 import ProgramEditPage from './pages/staff/programs/ProgramEditPage';
 import ScholarshipListPage from './pages/staff/scholarships/ScholarshipListPage';
 import HousingListPage from './pages/staff/housing/HousingListPage';
-import SupportServiceListPage from './pages/staff/support-services/SupportServiceListPage';
 import PathwayListPage from './pages/staff/pathways/PathwayListPage';
 import TestimonialListPage from './pages/staff/testimonials/TestimonialListPage';
 import BulkUploadPage from './pages/staff/bulk-upload/BulkUploadPage';
@@ -79,7 +78,6 @@ function RootRedirect() {
  *   /staff/programs/:id            → ProgramEditPage (edit)
  *   /staff/scholarships            → ScholarshipListPage
  *   /staff/housing                 → HousingListPage
- *   /staff/support-services        → SupportServiceListPage
  *   /staff/pathways                → PathwayListPage
  *   /staff/testimonials            → TestimonialListPage
  *   /staff/bulk-upload             → BulkUploadPage
@@ -126,10 +124,6 @@ function App() {
           <Route path="/staff/programs/:id" element={<ProgramEditPage />} />
           <Route path="/staff/scholarships" element={<ScholarshipListPage />} />
           <Route path="/staff/housing" element={<HousingListPage />} />
-          <Route
-            path="/staff/support-services"
-            element={<SupportServiceListPage />}
-          />
           <Route path="/staff/pathways" element={<PathwayListPage />} />
           <Route path="/staff/testimonials" element={<TestimonialListPage />} />
           <Route path="/staff/bulk-upload" element={<BulkUploadPage />} />

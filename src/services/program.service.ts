@@ -79,6 +79,10 @@ export interface ProgramResponse {
   programCredits?: string;
   comment?: string;
   status: string; // draft | in_review | approved | published | archived | scheduled
+  // Tags (may not be included in response, but can be sent in request)
+  skills?: string[];
+  nocCodes?: string[];
+  careerPaths?: string[];
   createdAt: string; // ISO 8601 timestamp
   updatedAt: string; // ISO 8601 timestamp
 }

@@ -5,7 +5,6 @@ import {
   BookOutlined,
   TrophyOutlined,
   HomeOutlined,
-  CustomerServiceOutlined,
   ApartmentOutlined,
   MessageOutlined,
   UploadOutlined,
@@ -68,11 +67,6 @@ export default function StaffLayout() {
       key: '/staff/housing',
       icon: <HomeOutlined />,
       label: 'Housing',
-    },
-    {
-      key: '/staff/support-services',
-      icon: <CustomerServiceOutlined />,
-      label: 'Support Services',
     },
     {
       key: '/staff/pathways',

@@ -9,23 +9,8 @@ import {
   type ProgramRequest,
   type ProgramResponse,
 } from '../../../services/program.service';
-import {
-  programRequirementService,
-  type ProgramRequirementRequest,
-  type ProgramRequirementResponse,
-} from '../../../services/program-requirement.service';
-import {
-  programIntakeService,
-  type ProgramIntakeRequest,
-  type ProgramIntakeResponse,
-} from '../../../services/program-intake.service';
-import RequirementListEditor from './RequirementListEditor';
-import IntakeListEditor from './IntakeListEditor';
-import CostEditor from './CostEditor';
-import CurriculumEditor from './CurriculumEditor';
 import TagsEditor from './TagsEditor';
 import PublishWorkflowPanel from './PublishWorkflowPanel';
-import RevisionHistoryList from './RevisionHistoryList';
 
 const { TextArea } = Input;
 
@@ -62,13 +47,12 @@ const basicInfoSchema = z.object({
 type BasicInfoFormData = z.infer<typeof basicInfoSchema>;
 
 /**
- * Program Edit Page - Step 3: Costs + Curriculum Tab
+ * Program Edit Page
  * 
  * Features:
- * - Tab structure: Basic Info | Requirements + Intakes | Costs + Curriculum
+ * - Tab structure: Basic Info | Tags + Workflow
  * - Basic Info Tab: All basic program fields
- * - Requirements + Intakes Tab: List editors for requirements and intakes
- * - Costs + Curriculum Tab: Cost editor (1:1) and Curriculum editor (1:many by language)
+ * - Tags + Workflow Tab: Tags editor (skills, NOC codes, career paths) and Publish workflow
  * - Note: institutionId is NOT sent - backend extracts from JWT
  */
 export default function ProgramEditPage() {
@@ -78,8 +62,6 @@ export default function ProgramEditPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [program, setProgram] = useState<ProgramResponse | null>(null);
-  const [requirements, setRequirements] = useState<ProgramRequirementResponse[]>([]);
-  const [intakes, setIntakes] = useState<ProgramIntakeResponse[]>([]);
   const [activeTab, setActiveTab] = useState('basic');
   const [tags, setTags] = useState<{ skills: string[]; nocCodes: string[]; careerPaths: string[] }>({
     skills: [],
@@ -127,15 +109,15 @@ export default function ProgramEditPage() {
   useEffect(() => {
     if (isEdit && id) {
       setLoading(true);
-      Promise.all([
-        programService.getById(id),
-        programRequirementService.list(id).catch(() => []),
-        programIntakeService.list(id).catch(() => []),
-      ])
-        .then(([programData, requirementsData, intakesData]) => {
+      programService.getById(id)
+        .then((programData) => {
           setProgram(programData);
-          setRequirements(requirementsData);
-          setIntakes(intakesData);
+          // Extract tags from program response if available
+          setTags({
+            skills: programData.skills || [],
+            nocCodes: programData.nocCodes || [],
+            careerPaths: programData.careerPaths || [],
+          });
           reset({
             name: programData.name || '',
             url: programData.url || '',
@@ -174,23 +156,6 @@ export default function ProgramEditPage() {
   }, [id, isEdit, navigate, reset]);
 
   /**
-   * Reload requirements and intakes
-   */
-  const reloadRequirementsAndIntakes = async () => {
-    if (!id) return;
-    try {
-      const [requirementsData, intakesData] = await Promise.all([
-        programRequirementService.list(id).catch(() => []),
-        programIntakeService.list(id).catch(() => []),
-      ]);
-      setRequirements(requirementsData);
-      setIntakes(intakesData);
-    } catch (error) {
-      console.error('Failed to reload requirements/intakes:', error);
-    }
-  };
-
-  /**
    * Reload program data (including tags if available)
    */
   const reloadProgram = async () => {
@@ -198,8 +163,12 @@ export default function ProgramEditPage() {
     try {
       const programData = await programService.getById(id);
       setProgram(programData);
-      // Note: ProgramResponse does not include tags, so we keep existing tags
-      // Tags will be loaded separately if backend provides an API
+      // Update tags from program response if available
+      setTags({
+        skills: programData.skills || [],
+        nocCodes: programData.nocCodes || [],
+        careerPaths: programData.careerPaths || [],
+      });
     } catch (error) {
       console.error('Failed to reload program:', error);
     }
@@ -235,16 +204,22 @@ export default function ProgramEditPage() {
         pathwayPrograms: data.pathwayPrograms || undefined,
         specialNotes: data.specialNotes || undefined,
         programCredits: data.programCredits || undefined,
+        // Include tags in the request
+        nocCodes: tags.nocCodes,
+        skills: tags.skills,
+        careerPaths: tags.careerPaths,
       };
 
       if (isEdit && id) {
-        await programService.update(id, request);
+        const updated = await programService.update(id, request);
+        setProgram(updated);
         message.success('Program updated successfully');
       } else {
         const created = await programService.create(request);
         message.success('Program created successfully');
         navigate(`/staff/programs/${created.id}`);
       }
+      await reloadProgram();
     } catch (error) {
       console.error('Failed to save program:', error);
       message.error(isEdit ? 'Failed to update program' : 'Failed to create program');
@@ -325,436 +300,408 @@ export default function ProgramEditPage() {
           </Space>
         }
       >
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <Tabs.TabPane tab="Basic Info" key="basic">
-            {/* Basic Info Form */}
-            <Form layout="vertical">
-              <Form.Item
-                label="Name"
-                required
-                validateStatus={errors.name ? 'error' : ''}
-                help={errors.name?.message}
-              >
-                <Controller
-                  name="name"
-                  control={control}
-                  render={({ field }) => (
-                    <Input placeholder="Enter program name" {...field} />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="URL"
-                validateStatus={errors.url ? 'error' : ''}
-                help={errors.url?.message}
-              >
-                <Controller
-                  name="url"
-                  control={control}
-                  render={({ field }) => (
-                    <Input placeholder="Enter program URL" {...field} />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Route"
-                validateStatus={errors.route ? 'error' : ''}
-                help={errors.route?.message}
-              >
-                <Controller
-                  name="route"
-                  control={control}
-                  render={({ field }) => (
-                    <Input placeholder="Enter admission route" {...field} />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Admission Logic"
-                validateStatus={errors.admissionLogic ? 'error' : ''}
-                help={errors.admissionLogic?.message}
-              >
-                <Controller
-                  name="admissionLogic"
-                  control={control}
-                  render={({ field }) => (
-                    <TextArea
-                      rows={2}
-                      placeholder="Enter admission logic description"
-                      {...field}
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={[
+            {
+              key: 'basic',
+              label: 'Basic Info',
+              children: (
+                <Form layout="vertical">
+                  <Form.Item
+                    label="Name"
+                    required
+                    validateStatus={errors.name ? 'error' : ''}
+                    help={errors.name?.message}
+                  >
+                    <Controller
+                      name="name"
+                      control={control}
+                      render={({ field }) => (
+                        <Input placeholder="Enter program name" {...field} />
+                      )}
                     />
-                  )}
-                />
-              </Form.Item>
+                  </Form.Item>
 
-              <Form.Item
-                label="Campus ID"
-                validateStatus={errors.campusId ? 'error' : ''}
-                help={errors.campusId?.message}
-              >
-                <Controller
-                  name="campusId"
-                  control={control}
-                  render={({ field }) => (
-                    <Input placeholder="Enter campus ID (UUID)" {...field} />
-                  )}
-                />
-              </Form.Item>
+                  <Form.Item
+                    label="URL"
+                    validateStatus={errors.url ? 'error' : ''}
+                    help={errors.url?.message}
+                  >
+                    <Controller
+                      name="url"
+                      control={control}
+                      render={({ field }) => (
+                        <Input placeholder="Enter program URL" {...field} />
+                      )}
+                    />
+                  </Form.Item>
 
-              <Form.Item
-                label="Department ID"
-                validateStatus={errors.departmentId ? 'error' : ''}
-                help={errors.departmentId?.message}
-              >
-                <Controller
-                  name="departmentId"
-                  control={control}
-                  render={({ field }) => (
-                    <Input placeholder="Enter department ID (UUID)" {...field} />
-                  )}
-                />
-              </Form.Item>
+                  <Form.Item
+                    label="Route"
+                    validateStatus={errors.route ? 'error' : ''}
+                    help={errors.route?.message}
+                  >
+                    <Controller
+                      name="route"
+                      control={control}
+                      render={({ field }) => (
+                        <Input placeholder="Enter admission route" {...field} />
+                      )}
+                    />
+                  </Form.Item>
 
-              <Form.Item
-                label="Credential"
-                validateStatus={errors.credential ? 'error' : ''}
-                help={errors.credential?.message}
-              >
-                <Controller
-                  name="credential"
-                  control={control}
-                  render={({ field }) => (
-                    <Input placeholder="Enter credential" {...field} />
-                  )}
-                />
-              </Form.Item>
+                  <Form.Item
+                    label="Admission Logic"
+                    validateStatus={errors.admissionLogic ? 'error' : ''}
+                    help={errors.admissionLogic?.message}
+                  >
+                    <Controller
+                      name="admissionLogic"
+                      control={control}
+                      render={({ field }) => (
+                        <TextArea
+                          rows={2}
+                          placeholder="Enter admission logic description"
+                          {...field}
+                        />
+                      )}
+                    />
+                  </Form.Item>
 
-              <Form.Item
-                label="Field of Study"
-                validateStatus={errors.fieldOfStudy ? 'error' : ''}
-                help={errors.fieldOfStudy?.message}
-              >
-                <Controller
-                  name="fieldOfStudy"
-                  control={control}
-                  render={({ field }) => (
-                    <Input placeholder="Enter field of study" {...field} />
-                  )}
-                />
-              </Form.Item>
+                  <Form.Item
+                    label="Campus ID"
+                    validateStatus={errors.campusId ? 'error' : ''}
+                    help={errors.campusId?.message}
+                  >
+                    <Controller
+                      name="campusId"
+                      control={control}
+                      render={({ field }) => (
+                        <Input placeholder="Enter campus ID (UUID)" {...field} />
+                      )}
+                    />
+                  </Form.Item>
 
-              <Form.Item
-                label="Program Level"
-                validateStatus={errors.programLevel ? 'error' : ''}
-                help={errors.programLevel?.message}
-              >
-                <Controller
-                  name="programLevel"
-                  control={control}
-                  render={({ field }) => (
-                    <Input placeholder="Enter program level" {...field} />
-                  )}
-                />
-              </Form.Item>
+                  <Form.Item
+                    label="Department ID"
+                    validateStatus={errors.departmentId ? 'error' : ''}
+                    help={errors.departmentId?.message}
+                  >
+                    <Controller
+                      name="departmentId"
+                      control={control}
+                      render={({ field }) => (
+                        <Input placeholder="Enter department ID (UUID)" {...field} />
+                      )}
+                    />
+                  </Form.Item>
 
-              <Form.Item
-                label="Delivery"
-                validateStatus={errors.delivery ? 'error' : ''}
-                help={errors.delivery?.message}
-              >
-                <Controller
-                  name="delivery"
-                  control={control}
-                  render={({ field }) => (
-                    <Input placeholder="Enter delivery method" {...field} />
-                  )}
-                />
-              </Form.Item>
+                  <Form.Item
+                    label="Credential"
+                    validateStatus={errors.credential ? 'error' : ''}
+                    help={errors.credential?.message}
+                  >
+                    <Controller
+                      name="credential"
+                      control={control}
+                      render={({ field }) => (
+                        <Input placeholder="Enter credential" {...field} />
+                      )}
+                    />
+                  </Form.Item>
 
-              <Form.Item
-                label="Duration (Months)"
-                validateStatus={errors.durationMonths ? 'error' : ''}
-                help={errors.durationMonths?.message}
-              >
-                <Controller
-                  name="durationMonths"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      type="number"
-                      placeholder="Enter duration in months"
-                      {...field}
-                      value={field.value}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        field.onChange(value ? parseInt(value, 10) : undefined);
+                  <Form.Item
+                    label="Field of Study"
+                    validateStatus={errors.fieldOfStudy ? 'error' : ''}
+                    help={errors.fieldOfStudy?.message}
+                  >
+                    <Controller
+                      name="fieldOfStudy"
+                      control={control}
+                      render={({ field }) => (
+                        <Input placeholder="Enter field of study" {...field} />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Program Level"
+                    validateStatus={errors.programLevel ? 'error' : ''}
+                    help={errors.programLevel?.message}
+                  >
+                    <Controller
+                      name="programLevel"
+                      control={control}
+                      render={({ field }) => (
+                        <Input placeholder="Enter program level" {...field} />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Delivery"
+                    validateStatus={errors.delivery ? 'error' : ''}
+                    help={errors.delivery?.message}
+                  >
+                    <Controller
+                      name="delivery"
+                      control={control}
+                      render={({ field }) => (
+                        <Input placeholder="Enter delivery method" {...field} />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Duration (Months)"
+                    validateStatus={errors.durationMonths ? 'error' : ''}
+                    help={errors.durationMonths?.message}
+                  >
+                    <Controller
+                      name="durationMonths"
+                      control={control}
+                      render={({ field }) => (
+                        <Input
+                          type="number"
+                          placeholder="Enter duration in months"
+                          {...field}
+                          value={field.value}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value ? parseInt(value, 10) : undefined);
+                          }}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Duration Text"
+                    validateStatus={errors.durationText ? 'error' : ''}
+                    help={errors.durationText?.message}
+                  >
+                    <Controller
+                      name="durationText"
+                      control={control}
+                      render={({ field }) => (
+                        <Input placeholder="Enter duration as text" {...field} />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Overview"
+                    validateStatus={errors.overview ? 'error' : ''}
+                    help={errors.overview?.message}
+                  >
+                    <Controller
+                      name="overview"
+                      control={control}
+                      render={({ field }) => (
+                        <TextArea
+                          rows={6}
+                          placeholder="Enter program overview"
+                          {...field}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Curriculum Overview"
+                    validateStatus={errors.curriculumOverview ? 'error' : ''}
+                    help={errors.curriculumOverview?.message}
+                  >
+                    <Controller
+                      name="curriculumOverview"
+                      control={control}
+                      render={({ field }) => (
+                        <TextArea
+                          rows={6}
+                          placeholder="Enter curriculum overview"
+                          {...field}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Career Outcomes"
+                    validateStatus={errors.careerOutcomes ? 'error' : ''}
+                    help={errors.careerOutcomes?.message}
+                  >
+                    <Controller
+                      name="careerOutcomes"
+                      control={control}
+                      render={({ field }) => (
+                        <TextArea
+                          rows={4}
+                          placeholder="Enter career outcomes"
+                          {...field}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Co-op Available"
+                    validateStatus={errors.coopAvailable ? 'error' : ''}
+                    help={errors.coopAvailable?.message}
+                  >
+                    <Controller
+                      name="coopAvailable"
+                      control={control}
+                      render={({ field }) => (
+                        <Switch checked={field.value} onChange={field.onChange} />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="International Available"
+                    validateStatus={errors.internationalAvailable ? 'error' : ''}
+                    help={errors.internationalAvailable?.message}
+                  >
+                    <Controller
+                      name="internationalAvailable"
+                      control={control}
+                      render={({ field }) => (
+                        <Switch checked={field.value} onChange={field.onChange} />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Domestic Available"
+                    validateStatus={errors.domesticAvailable ? 'error' : ''}
+                    help={errors.domesticAvailable?.message}
+                  >
+                    <Controller
+                      name="domesticAvailable"
+                      control={control}
+                      render={({ field }) => (
+                        <Switch checked={field.value} onChange={field.onChange} />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Transfer Credits Available"
+                    validateStatus={errors.transferCreditsAvailable ? 'error' : ''}
+                    help={errors.transferCreditsAvailable?.message}
+                  >
+                    <Controller
+                      name="transferCreditsAvailable"
+                      control={control}
+                      render={({ field }) => (
+                        <Switch checked={field.value} onChange={field.onChange} />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Transfer Note"
+                    validateStatus={errors.transferNote ? 'error' : ''}
+                    help={errors.transferNote?.message}
+                  >
+                    <Controller
+                      name="transferNote"
+                      control={control}
+                      render={({ field }) => (
+                        <TextArea
+                          rows={3}
+                          placeholder="Enter transfer note"
+                          {...field}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Pathway Programs"
+                    validateStatus={errors.pathwayPrograms ? 'error' : ''}
+                    help={errors.pathwayPrograms?.message}
+                  >
+                    <Controller
+                      name="pathwayPrograms"
+                      control={control}
+                      render={({ field }) => (
+                        <Input placeholder="Enter pathway programs" {...field} />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Special Notes"
+                    validateStatus={errors.specialNotes ? 'error' : ''}
+                    help={errors.specialNotes?.message}
+                  >
+                    <Controller
+                      name="specialNotes"
+                      control={control}
+                      render={({ field }) => (
+                        <TextArea
+                          rows={4}
+                          placeholder="Enter special notes"
+                          {...field}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Program Credits"
+                    validateStatus={errors.programCredits ? 'error' : ''}
+                    help={errors.programCredits?.message}
+                  >
+                    <Controller
+                      name="programCredits"
+                      control={control}
+                      render={({ field }) => (
+                        <Input placeholder="Enter program credits" {...field} />
+                      )}
+                    />
+                  </Form.Item>
+                </Form>
+              ),
+            },
+            {
+              key: 'tags-workflow',
+              label: 'Tags + Workflow',
+              children: id && program ? (
+                <>
+                  <TagsEditor
+                    programId={id}
+                    initialSkills={tags.skills}
+                    initialNocCodes={tags.nocCodes}
+                    initialCareerPaths={tags.careerPaths}
+                    onSave={async (newTags) => {
+                      setTags(newTags);
+                      // Save tags to program
+                      await programService.update(id, {
+                        nocCodes: newTags.nocCodes,
+                        skills: newTags.skills,
+                        careerPaths: newTags.careerPaths,
+                      });
+                      await reloadProgram();
+                    }}
+                  />
+                  <div style={{ marginTop: 24 }}>
+                    <PublishWorkflowPanel
+                      program={program}
+                      onStatusChange={async (updatedProgram) => {
+                        setProgram(updatedProgram);
+                        await reloadProgram();
                       }}
                     />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Duration Text"
-                validateStatus={errors.durationText ? 'error' : ''}
-                help={errors.durationText?.message}
-              >
-                <Controller
-                  name="durationText"
-                  control={control}
-                  render={({ field }) => (
-                    <Input placeholder="Enter duration as text" {...field} />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Overview"
-                validateStatus={errors.overview ? 'error' : ''}
-                help={errors.overview?.message}
-              >
-                <Controller
-                  name="overview"
-                  control={control}
-                  render={({ field }) => (
-                    <TextArea
-                      rows={6}
-                      placeholder="Enter program overview"
-                      {...field}
-                    />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Curriculum Overview"
-                validateStatus={errors.curriculumOverview ? 'error' : ''}
-                help={errors.curriculumOverview?.message}
-              >
-                <Controller
-                  name="curriculumOverview"
-                  control={control}
-                  render={({ field }) => (
-                    <TextArea
-                      rows={6}
-                      placeholder="Enter curriculum overview"
-                      {...field}
-                    />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Career Outcomes"
-                validateStatus={errors.careerOutcomes ? 'error' : ''}
-                help={errors.careerOutcomes?.message}
-              >
-                <Controller
-                  name="careerOutcomes"
-                  control={control}
-                  render={({ field }) => (
-                    <TextArea
-                      rows={4}
-                      placeholder="Enter career outcomes"
-                      {...field}
-                    />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Co-op Available"
-                validateStatus={errors.coopAvailable ? 'error' : ''}
-                help={errors.coopAvailable?.message}
-              >
-                <Controller
-                  name="coopAvailable"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch checked={field.value} onChange={field.onChange} />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="International Available"
-                validateStatus={errors.internationalAvailable ? 'error' : ''}
-                help={errors.internationalAvailable?.message}
-              >
-                <Controller
-                  name="internationalAvailable"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch checked={field.value} onChange={field.onChange} />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Domestic Available"
-                validateStatus={errors.domesticAvailable ? 'error' : ''}
-                help={errors.domesticAvailable?.message}
-              >
-                <Controller
-                  name="domesticAvailable"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch checked={field.value} onChange={field.onChange} />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Transfer Credits Available"
-                validateStatus={errors.transferCreditsAvailable ? 'error' : ''}
-                help={errors.transferCreditsAvailable?.message}
-              >
-                <Controller
-                  name="transferCreditsAvailable"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch checked={field.value} onChange={field.onChange} />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Transfer Note"
-                validateStatus={errors.transferNote ? 'error' : ''}
-                help={errors.transferNote?.message}
-              >
-                <Controller
-                  name="transferNote"
-                  control={control}
-                  render={({ field }) => (
-                    <TextArea
-                      rows={3}
-                      placeholder="Enter transfer note"
-                      {...field}
-                    />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Pathway Programs"
-                validateStatus={errors.pathwayPrograms ? 'error' : ''}
-                help={errors.pathwayPrograms?.message}
-              >
-                <Controller
-                  name="pathwayPrograms"
-                  control={control}
-                  render={({ field }) => (
-                    <Input placeholder="Enter pathway programs" {...field} />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Special Notes"
-                validateStatus={errors.specialNotes ? 'error' : ''}
-                help={errors.specialNotes?.message}
-              >
-                <Controller
-                  name="specialNotes"
-                  control={control}
-                  render={({ field }) => (
-                    <TextArea
-                      rows={4}
-                      placeholder="Enter special notes"
-                      {...field}
-                    />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Program Credits"
-                validateStatus={errors.programCredits ? 'error' : ''}
-                help={errors.programCredits?.message}
-              >
-                <Controller
-                  name="programCredits"
-                  control={control}
-                  render={({ field }) => (
-                    <Input placeholder="Enter program credits" {...field} />
-                  )}
-                />
-              </Form.Item>
-            </Form>
-          </Tabs.TabPane>
-
-          <Tabs.TabPane tab="Requirements + Intakes" key="requirements-intakes">
-            {id && (
-              <>
-                <RequirementListEditor
-                  programId={id}
-                  requirements={requirements}
-                  onReload={reloadRequirementsAndIntakes}
-                />
-                <div style={{ marginTop: 24 }}>
-                  <IntakeListEditor
-                    programId={id}
-                    intakes={intakes}
-                    onReload={reloadRequirementsAndIntakes}
-                  />
-                </div>
-              </>
-            )}
-          </Tabs.TabPane>
-
-          <Tabs.TabPane tab="Costs + Curriculum" key="costs-curriculum">
-            {id && (
-              <>
-                <CostEditor programId={id} onReload={reloadRequirementsAndIntakes} />
-                <div style={{ marginTop: 24 }}>
-                  <CurriculumEditor
-                    programId={id}
-                    onReload={reloadRequirementsAndIntakes}
-                  />
-                </div>
-              </>
-            )}
-          </Tabs.TabPane>
-
-          <Tabs.TabPane tab="Tags + Workflow" key="tags-workflow">
-            {id && program && (
-              <>
-                <TagsEditor
-                  programId={id}
-                  initialSkills={tags.skills}
-                  initialNocCodes={tags.nocCodes}
-                  initialCareerPaths={tags.careerPaths}
-                  onSave={async (newTags) => {
-                    setTags(newTags);
-                    await reloadProgram();
-                  }}
-                />
-                <div style={{ marginTop: 24 }}>
-                  <PublishWorkflowPanel
-                    program={program}
-                    onStatusChange={async (updatedProgram) => {
-                      setProgram(updatedProgram);
-                      await reloadProgram();
-                    }}
-                  />
-                </div>
-                <div style={{ marginTop: 24 }}>
-                  <RevisionHistoryList
-                    programId={id}
-                    onRollback={async (updatedProgram) => {
-                      setProgram(updatedProgram);
-                      await reloadProgram();
-                    }}
-                  />
-                </div>
-              </>
-            )}
-          </Tabs.TabPane>
-        </Tabs>
+                  </div>
+                </>
+              ) : null,
+            },
+          ]}
+        />
       </Card>
     </div>
   );
