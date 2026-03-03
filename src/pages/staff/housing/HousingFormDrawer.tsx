@@ -157,7 +157,7 @@ export default function HousingFormDrawer({
   return (
     <Drawer
       title={isEdit ? 'Edit Housing Option' : 'Create Housing Option'}
-      width={720}
+      size={720}
       open={visible}
       onClose={onClose}
       footer={
