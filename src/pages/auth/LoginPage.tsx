@@ -93,10 +93,10 @@ export default function LoginPage() {
       }
 
       // Navigate based on role
-      // SUPER_ADMIN or ADMIN → /admin/dashboard
+      // ADMIN → /admin/dashboard (backend returns "ADMIN", not "SUPER_ADMIN")
       // STAFF → /staff/dashboard
       const normalizedRole = role.toUpperCase();
-      if (normalizedRole === 'SUPER_ADMIN' || normalizedRole === 'ADMIN') {
+      if (normalizedRole === 'ADMIN') {
         navigate('/admin/dashboard', { replace: true });
       } else if (normalizedRole === 'STAFF') {
         navigate('/staff/dashboard', { replace: true });
@@ -130,26 +130,46 @@ export default function LoginPage() {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        backgroundColor: '#f0f2f5',
+        backgroundColor: '#f5f5f5',
         padding: '20px',
+        background: 'linear-gradient(135deg, #f5f5f5 0%, #e5e7eb 100%)',
       }}
     >
       <Card
         style={{
           width: '100%',
-          maxWidth: 400,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          maxWidth: 440,
+          borderRadius: '12px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+          border: '1px solid #e5e7eb',
+        }}
+        styles={{
+          body: {
+            padding: '40px',
+          },
         }}
       >
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <div style={{ textAlign: 'center' }}>
-            <Title level={2}>Login</Title>
-            <Text type="secondary">Sign in to your account</Text>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+          <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+            <div style={{ 
+              fontSize: '28px', 
+              fontWeight: 600, 
+              color: '#003366',
+              marginBottom: '8px',
+            }}>
+              ApplyAlberta
+            </div>
+            <Title level={2} style={{ marginBottom: '4px', color: '#003366' }}>
+              Admin Login
+            </Title>
+            <Text type="secondary" style={{ fontSize: '14px' }}>
+              Sign in to your admin account
+            </Text>
           </div>
 
           {error && (
             <Alert
-              message="Login Failed"
+              title="Login Failed"
               description={error}
               type="error"
               showIcon
@@ -220,13 +240,20 @@ export default function LoginPage() {
               />
             </Form.Item>
 
-            <Form.Item>
+            <Form.Item style={{ marginBottom: 0, marginTop: '24px' }}>
               <Button
                 type="primary"
                 htmlType="submit"
                 size="large"
                 block
                 loading={loading}
+                style={{
+                  height: '44px',
+                  fontSize: '16px',
+                  fontWeight: 500,
+                  background: '#003366',
+                  borderColor: '#003366',
+                }}
               >
                 {loading ? 'Logging in...' : 'Login'}
               </Button>
