@@ -181,7 +181,7 @@ export default function PublishWorkflowPanel({
 
       case 'scheduled':
         return (
-          <Space direction="vertical">
+          <Space orientation="vertical">
             <div>
               <strong>Status:</strong> Scheduled for future publish
             </div>
@@ -206,7 +206,7 @@ export default function PublishWorkflowPanel({
   return (
     <>
       <Card title="Publish Workflow" style={{ marginBottom: 16 }}>
-        <Space direction="vertical" style={{ width: '100%' }}>
+        <Space orientation="vertical" style={{ width: '100%' }}>
           <div>
             <strong>Current Status:</strong> <span style={{ textTransform: 'capitalize' }}>{status}</span>
           </div>

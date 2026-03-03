@@ -105,7 +105,7 @@ export default function TagsEditor({
 
   return (
     <Card title="Tags & Extras" extra={<Button type="primary" loading={saving} onClick={handleSave}>Save Tags</Button>}>
-      <Space direction="vertical" style={{ width: '100%' }} size="large">
+      <Space orientation="vertical" style={{ width: '100%' }} size="large">
         {/* Skills */}
         <div>
           <Form.Item label="Skills">
