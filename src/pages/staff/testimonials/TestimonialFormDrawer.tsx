@@ -171,7 +171,7 @@ export default function TestimonialFormDrawer({
   return (
     <Drawer
       title={isEdit ? 'Edit Testimonial' : 'Create Testimonial'}
-      width={720}
+      size={720}
       open={visible}
       onClose={onClose}
       footer={
