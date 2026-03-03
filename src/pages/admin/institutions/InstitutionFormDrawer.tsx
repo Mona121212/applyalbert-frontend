@@ -165,7 +165,7 @@ export default function InstitutionFormDrawer({
   return (
     <Drawer
       title={isEdit ? 'Edit Institution' : 'Create Institution'}
-      width={720}
+      size={720}
       open={visible}
       onClose={onClose}
       footer={
