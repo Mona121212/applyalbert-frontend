@@ -1,10 +1,11 @@
-import { Layout, Menu, Button, Space, Typography, Dropdown, Avatar } from 'antd';
+import { Layout, Menu, Button, Space, Typography, Tag } from 'antd';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   DashboardOutlined,
   BankOutlined,
   UserOutlined,
   LogoutOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/auth.store';
 import { authService } from '../services/auth.service';
@@ -24,7 +25,7 @@ const { Text } = Typography;
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { role, userId } = useAuthStore();
+  const { role } = useAuthStore();
 
   // Menu items
   const menuItems: MenuProps['items'] = [
@@ -64,18 +65,12 @@ export default function AdminLayout() {
     }
   };
 
-  // User menu dropdown items
-  const userMenuItems: MenuProps['items'] = [
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Logout',
-      onClick: handleLogout,
-    },
-  ];
-
   // Get selected menu key from current path
   const selectedKeys = [location.pathname];
+
+  // Get user info (this should come from user service in real app)
+  const userEmail = 'admin@applyalberta.ca';
+  const displayName = 'Sarah Administrator';
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
@@ -88,35 +83,36 @@ export default function AdminLayout() {
           left: 0,
           top: 0,
           bottom: 0,
-          background: '#003366', // Alberta Blue
+          background: '#ffffff',
+          borderRight: '1px solid #e5e7eb',
         }}
-        theme="dark"
+        theme="light"
       >
-        <div
-          style={{
-            height: 64,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontSize: 20,
-            fontWeight: 600,
-            borderBottom: '1px solid rgba(255,255,255,0.1)',
-            background: '#001f3d', // Darker blue for header
-          }}
-        >
-          ApplyAlberta
-        </div>
         <Menu
-          theme="dark"
           mode="inline"
           selectedKeys={selectedKeys}
           items={menuItems}
           onClick={handleMenuClick}
           style={{ 
             borderRight: 0,
-            background: '#003366',
+            background: '#ffffff',
             paddingTop: '16px',
+          }}
+          styles={{
+            item: {
+              margin: '4px 8px',
+              borderRadius: '6px',
+              fontSize: '16px',
+            },
+            itemSelected: {
+              backgroundColor: '#1890ff',
+              color: '#ffffff',
+              fontSize: '16px',
+            },
+            itemActive: {
+              backgroundColor: '#e6f7ff',
+              fontSize: '16px',
+            },
           }}
         />
       </Sider>
@@ -132,51 +128,65 @@ export default function AdminLayout() {
             position: 'sticky',
             top: 0,
             zIndex: 100,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
             borderBottom: '1px solid #e5e7eb',
+            height: 64,
           }}
         >
           <div>
-            <Text strong style={{ fontSize: 18, color: '#003366' }}>
-              Admin Panel
-            </Text>
+            <Space>
+              <SettingOutlined style={{ fontSize: 20, color: '#333333' }} />
+              <div>
+                <Text strong style={{ fontSize: 18, color: '#333333', display: 'block' }}>
+                  Admin Dashboard
+                </Text>
+                <Text style={{ fontSize: 14, color: '#6b7280', display: 'block' }}>
+                  Apply Alberta CMS
+                </Text>
+              </div>
+            </Space>
           </div>
 
           <Space size="middle">
-            <Text type="secondary" style={{ fontSize: 14 }}>
-              Role: <Text strong style={{ color: '#003366' }}>{role || 'N/A'}</Text>
-            </Text>
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <Button 
-                type="text" 
-                style={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  height: 'auto',
-                  padding: '4px 12px',
-                }}
-              >
-                <Space>
-                  <Avatar 
-                    icon={<UserOutlined />} 
-                    size="small"
-                    style={{ background: '#003366' }}
-                  />
-                  <Text style={{ color: '#374151' }}>Admin</Text>
-                </Space>
-              </Button>
-            </Dropdown>
+            <div style={{ textAlign: 'right' }}>
+              <Space>
+                <Text strong style={{ fontSize: 16, color: '#333333' }}>
+                  {displayName}
+                </Text>
+                <Tag color="default" style={{ margin: 0, borderRadius: '4px', fontSize: '14px' }}>
+                  admin
+                </Tag>
+              </Space>
+              <div>
+                <Text style={{ fontSize: 14, color: '#6b7280', display: 'block' }}>
+                  {userEmail}
+                </Text>
+              </div>
+            </div>
+            <Button 
+              type="text" 
+              icon={<LogoutOutlined />}
+              onClick={handleLogout}
+              style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                height: 'auto',
+                padding: '4px 12px',
+                color: '#333333',
+                fontSize: '16px',
+              }}
+            >
+              Logout
+            </Button>
           </Space>
         </Header>
 
         <Content
           style={{
             margin: '24px',
-            padding: '32px',
+            padding: 0,
             minHeight: 280,
-            background: '#fff',
-            borderRadius: '8px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            background: 'transparent',
           }}
         >
           <Outlet />

@@ -44,7 +44,7 @@
 
 .ant-statistic-title {
   color: #6b7280;
-  font-size: 14px;
+  font-size: 16px !important;
   font-weight: 500;
 }
 
@@ -54,4 +54,50 @@
 
 .ant-menu-dark .ant-menu-item:hover {
   background-color: #004d99 !important;
+}
+
+/* Font Size Overrides for Admin Pages */
+.ant-typography h1 {
+  font-size: 32px !important;
+}
+
+.ant-typography {
+  font-size: 16px !important;
+}
+
+/* Menu font size */
+.ant-menu-item {
+  font-size: 16px !important;
+}
+
+.ant-menu-item-selected {
+  font-size: 16px !important;
+}
+
+/* Button font size */
+.ant-btn {
+  font-size: 16px !important;
+}
+
+/* Table font size */
+.ant-table {
+  font-size: 16px !important;
+}
+
+.ant-table-thead > tr > th {
+  font-size: 16px !important;
+}
+
+.ant-table-tbody > tr > td {
+  font-size: 16px !important;
+}
+
+/* Statistic value font size */
+.ant-statistic-content {
+  font-size: 36px !important;
+}
+
+/* Tag font size */
+.ant-tag {
+  font-size: 14px !important;
 }

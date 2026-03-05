@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, Select, Tag, Popconfirm, message } from 'antd';
+import { Table, Button, Space, Select, Tag, Popconfirm, message, Typography } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+
+const { Title, Text } = Typography;
 import {
   institutionService,
   type InstitutionResponse,
@@ -165,9 +167,20 @@ export default function InstitutionListPage() {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)}>{status?.toUpperCase()}</Tag>
-      ),
+      render: (status: string) => {
+        const color = getStatusColor(status);
+        return (
+          <Tag 
+            color={color}
+            style={{ 
+              borderRadius: '4px',
+              border: 'none',
+            }}
+          >
+            {status?.toUpperCase()}
+          </Tag>
+        );
+      },
     },
     {
       title: 'Created At',
@@ -184,6 +197,7 @@ export default function InstitutionListPage() {
             type="link"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
+            style={{ color: '#1890ff', fontSize: '16px' }}
           >
             Edit
           </Button>
@@ -194,7 +208,12 @@ export default function InstitutionListPage() {
             okText="Yes"
             cancelText="No"
           >
-            <Button type="link" danger icon={<DeleteOutlined />}>
+            <Button 
+              type="link" 
+              danger 
+              icon={<DeleteOutlined />}
+              style={{ color: '#f5222d', fontSize: '16px' }}
+            >
               Archive
             </Button>
           </Popconfirm>
@@ -204,24 +223,45 @@ export default function InstitutionListPage() {
   ];
 
   return (
-    <div>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-        <Space>
-          <Select
-            value={statusFilter}
-            onChange={setStatusFilter}
-            style={{ width: 150 }}
-            options={[
-              { label: 'All (exclude archived)', value: 'all' },
-              { label: 'Published', value: 'published' },
-              { label: 'Draft', value: 'draft' },
-              { label: 'Archived', value: 'archived' },
-            ]}
-          />
-        </Space>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+    <div style={{ padding: '32px', background: '#ffffff', borderRadius: '8px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <Title level={2} style={{ marginBottom: '8px', color: '#333333', fontSize: '28px', fontWeight: 600 }}>
+            Institution Management
+          </Title>
+          <Text style={{ fontSize: '16px', color: '#6b7280' }}>
+            Add and manage institutions
+          </Text>
+        </div>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
+          onClick={handleCreate}
+          style={{
+            background: '#1890ff',
+            borderColor: '#1890ff',
+            height: '40px',
+            fontSize: '16px',
+          }}
+        >
           Create Institution
         </Button>
+      </div>
+
+      {/* Filters */}
+      <div style={{ marginBottom: '16px' }}>
+        <Select
+          value={statusFilter}
+          onChange={setStatusFilter}
+          style={{ width: 200 }}
+          options={[
+            { label: 'All (exclude archived)', value: 'all' },
+            { label: 'Published', value: 'published' },
+            { label: 'Draft', value: 'draft' },
+            { label: 'Archived', value: 'archived' },
+          ]}
+        />
       </div>
 
       <Table
@@ -242,6 +282,11 @@ export default function InstitutionListPage() {
             paginationConfig.pageSize || 10
           );
         }}
+        style={{
+          background: '#ffffff',
+          fontSize: '16px',
+        }}
+        rowClassName={() => 'dashboard-table-row'}
       />
 
       <InstitutionFormDrawer

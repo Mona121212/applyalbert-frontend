@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Table, Space, Typography, Spin, message } from 'antd';
+import { Card, Row, Col, Statistic, Table, Space, Typography, Spin, message, Tag } from 'antd';
 
 const { Title, Text } = Typography;
-import { BankOutlined, UserOutlined } from '@ant-design/icons';
+import { 
+  BookOutlined, 
+  StarOutlined,
+  MessageOutlined,
+  TeamOutlined,
+} from '@ant-design/icons';
 import { institutionService, type InstitutionResponse } from '../../services/institution.service';
 import { userService, type StaffUserResponse } from '../../services/user.service';
 import dayjs from 'dayjs';
@@ -17,7 +22,6 @@ import dayjs from 'dayjs';
  */
 export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
-  const [institutionCount, setInstitutionCount] = useState(0);
   const [staffCount, setStaffCount] = useState(0);
   const [recentInstitutions, setRecentInstitutions] = useState<InstitutionResponse[]>([]);
   const [recentStaff, setRecentStaff] = useState<StaffUserResponse[]>([]);
@@ -36,7 +40,6 @@ export default function AdminDashboardPage() {
       ]);
 
       // Set counts
-      setInstitutionCount(institutionsResult.total);
       setStaffCount(staffResult.total);
 
       // Set recent items (sorted by createdAt desc, which should be default from backend)
@@ -130,20 +133,28 @@ export default function AdminDashboardPage() {
     );
   }
 
+  // Get user info (this should come from user service in real app)
+  const displayName = 'Sarah Administrator';
+  const lastLogin = '3/4/2026, 3:08:12 PM';
+
   return (
-    <div>
+    <div style={{ padding: '32px', background: '#ffffff', borderRadius: '8px' }}>
+      {/* Welcome Section */}
       <div style={{ marginBottom: '32px' }}>
-        <Title level={2} style={{ marginBottom: '8px', color: '#003366' }}>
-          Dashboard
+        <Title level={1} style={{ marginBottom: '8px', color: '#333333', fontSize: '32px', fontWeight: 600 }}>
+          Welcome back, {displayName}!
         </Title>
-        <Text type="secondary" style={{ fontSize: 14 }}>
-          Overview of institutions and staff management
-        </Text>
+        <Space>
+          <Text style={{ fontSize: '16px', color: '#6b7280' }}>
+            Last login: {lastLogin}
+          </Text>
+          <Tag color="default" style={{ borderRadius: '4px' }}>ADMIN</Tag>
+        </Space>
       </div>
 
       {/* Statistics Cards */}
       <Row gutter={[24, 24]} style={{ marginBottom: '32px' }}>
-        <Col xs={24} sm={12} lg={12}>
+        <Col xs={24} sm={12} lg={6}>
           <Card
             hoverable
             style={{
@@ -154,23 +165,23 @@ export default function AdminDashboardPage() {
           >
             <Statistic
               title={
-                <span style={{ color: '#6b7280', fontSize: '14px', fontWeight: 500 }}>
-                  Total Institutions
+                <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>
+                  Programs
                 </span>
               }
-              value={institutionCount}
-              prefix={<BankOutlined style={{ color: '#003366' }} />}
+              value={6}
+              prefix={<BookOutlined style={{ color: '#1890ff', fontSize: '28px' }} />}
               styles={{
                 content: {
-                  color: '#003366',
-                  fontSize: '32px',
+                  color: '#333333',
+                  fontSize: '36px',
                   fontWeight: 600,
                 },
               }}
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={12}>
+        <Col xs={24} sm={12} lg={6}>
           <Card
             hoverable
             style={{
@@ -181,16 +192,70 @@ export default function AdminDashboardPage() {
           >
             <Statistic
               title={
-                <span style={{ color: '#6b7280', fontSize: '14px', fontWeight: 500 }}>
-                  Total Staff
+                <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>
+                  Scholarships
+                </span>
+              }
+              value={6}
+              prefix={<StarOutlined style={{ color: '#52c41a', fontSize: '28px' }} />}
+              styles={{
+                content: {
+                  color: '#333333',
+                  fontSize: '36px',
+                  fontWeight: 600,
+                },
+              }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card
+            hoverable
+            style={{
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            }}
+          >
+            <Statistic
+              title={
+                <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>
+                  Testimonials
+                </span>
+              }
+              value={8}
+              prefix={<MessageOutlined style={{ color: '#722ed1', fontSize: '28px' }} />}
+              styles={{
+                content: {
+                  color: '#333333',
+                  fontSize: '36px',
+                  fontWeight: 600,
+                },
+              }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card
+            hoverable
+            style={{
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            }}
+          >
+            <Statistic
+              title={
+                <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>
+                  Active Staff
                 </span>
               }
               value={staffCount}
-              prefix={<UserOutlined style={{ color: '#006600' }} />}
+              prefix={<TeamOutlined style={{ color: '#fa8c16', fontSize: '28px' }} />}
               styles={{
                 content: {
-                  color: '#006600',
-                  fontSize: '32px',
+                  color: '#333333',
+                  fontSize: '36px',
                   fontWeight: 600,
                 },
               }}
@@ -204,7 +269,7 @@ export default function AdminDashboardPage() {
         <Col xs={24} lg={12}>
           <Card 
             title={
-              <span style={{ color: '#003366', fontSize: '16px', fontWeight: 600 }}>
+              <span style={{ color: '#003366', fontSize: '18px', fontWeight: 600 }}>
                 Recent Institutions
               </span>
             }
@@ -234,7 +299,7 @@ export default function AdminDashboardPage() {
                 rowKey="id"
                 pagination={false}
                 size="small"
-                style={{ fontSize: '14px' }}
+                style={{ fontSize: '16px' }}
                 rowClassName={() => 'dashboard-table-row'}
               />
             )}
@@ -243,7 +308,7 @@ export default function AdminDashboardPage() {
         <Col xs={24} lg={12}>
           <Card 
             title={
-              <span style={{ color: '#003366', fontSize: '16px', fontWeight: 600 }}>
+              <span style={{ color: '#003366', fontSize: '18px', fontWeight: 600 }}>
                 Recent Staff
               </span>
             }
@@ -273,7 +338,7 @@ export default function AdminDashboardPage() {
                 rowKey="id"
                 pagination={false}
                 size="small"
-                style={{ fontSize: '14px' }}
+                style={{ fontSize: '16px' }}
                 rowClassName={() => 'dashboard-table-row'}
               />
             )}

@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, Select, Tag, Popconfirm, message, Switch } from 'antd';
-import { PlusOutlined, EditOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import { Card, Button, Space, Select, Tag, message, Row, Col, Avatar, Typography, Divider } from 'antd';
+import { PlusOutlined, MailOutlined, CalendarOutlined, UserOutlined, StopOutlined } from '@ant-design/icons';
 import {
   userService,
   type StaffUserResponse,
 } from '../../../services/user.service';
 import { institutionService, type InstitutionResponse } from '../../../services/institution.service';
 import StaffFormModal from './StaffFormModal';
+import dayjs from 'dayjs';
+
+const { Title, Text } = Typography;
 
 /**
  * Staff List Page
@@ -149,77 +151,59 @@ export default function StaffListPage() {
    */
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString();
+    return dayjs(dateString).format('M/D/YYYY');
   };
 
   /**
-   * Table columns
+   * Format date time
    */
-  const columns: ColumnsType<StaffUserResponse> = [
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
-    },
-    {
-      title: 'Display Name',
-      dataIndex: 'displayName',
-      key: 'displayName',
-    },
-    {
-      title: 'Institution',
-      key: 'institution',
-      render: (_: any, record: StaffUserResponse) => (
-        getInstitutionName(record.institutionId)
-      ),
-    },
-    {
-      title: 'Role',
-      dataIndex: 'role',
-      key: 'role',
-      render: (role: string) => (
-        <Tag color={role === 'ADMIN' ? 'red' : 'blue'}>
-          {role?.toUpperCase()}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Active',
-      dataIndex: 'isActive',
-      key: 'isActive',
-      render: (isActive: boolean, record: StaffUserResponse) => (
-        <Switch
-          checked={isActive}
-          onChange={() => handleToggleActive(record.id, isActive)}
-        />
-      ),
-    },
-    {
-      title: 'Created At',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: formatDate,
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_: any, record: StaffUserResponse) => (
-        <Space>
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            Edit
-          </Button>
-        </Space>
-      ),
-    },
-  ];
+  const formatDateTime = (dateString?: string) => {
+    if (!dateString) return '-';
+    return dayjs(dateString).format('M/D/YYYY, h:mm:ss A');
+  };
+
+  /**
+   * Get initials for avatar
+   */
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
-    <div>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+    <div style={{ padding: '32px', background: '#ffffff', borderRadius: '8px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <Title level={2} style={{ marginBottom: '8px', color: '#333333', fontSize: '28px', fontWeight: 600 }}>
+            Staff Management
+          </Title>
+          <Text style={{ fontSize: '16px', color: '#6b7280' }}>
+            Add and manage admin and staff users
+          </Text>
+        </div>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
+          onClick={handleCreate}
+          style={{
+            background: '#1890ff',
+            borderColor: '#1890ff',
+            height: '40px',
+            fontSize: '16px',
+          }}
+        >
+          + Add Staff Member
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <div style={{ marginBottom: '24px' }}>
         <Space>
           <Select
             placeholder="Filter by Institution"
@@ -244,30 +228,127 @@ export default function StaffListPage() {
             ]}
           />
         </Space>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          Create Staff
-        </Button>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={data}
-        rowKey="id"
-        loading={loading}
-        pagination={{
-          current: pagination.current,
-          pageSize: pagination.pageSize,
-          total: pagination.total,
-          showSizeChanger: true,
-          showTotal: (total) => `Total ${total} users`,
-        }}
-        onChange={(paginationConfig) => {
-          handleTableChange(
-            paginationConfig.current || 1,
-            paginationConfig.pageSize || 20
-          );
-        }}
-      />
+      {/* Staff Cards */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          Loading...
+        </div>
+      ) : (
+        <Row gutter={[24, 24]}>
+          {data.map((user) => (
+            <Col xs={24} sm={12} lg={12} key={user.id}>
+              <Card
+                style={{
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                }}
+              >
+                <div style={{ display: 'flex', gap: '16px' }}>
+                  {/* Avatar */}
+                  <Avatar
+                    size={64}
+                    style={{
+                      backgroundColor: '#722ed1',
+                      color: '#ffffff',
+                      fontSize: '24px',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {getInitials(user.displayName || user.email)}
+                  </Avatar>
+
+                  {/* Content */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ marginBottom: '12px' }}>
+                      <Title level={4} style={{ marginBottom: '8px', color: '#333333', fontSize: '18px', fontWeight: 600 }}>
+                        {user.displayName || user.email}
+                      </Title>
+                      <Space>
+                        <Tag 
+                          color={user.role === 'ADMIN' ? 'default' : 'default'}
+                          style={{ 
+                            borderRadius: '4px',
+                            backgroundColor: user.role === 'ADMIN' ? '#000000' : '#f3f4f6',
+                            color: user.role === 'ADMIN' ? '#ffffff' : '#333333',
+                            border: 'none',
+                            fontSize: '14px',
+                          }}
+                        >
+                          {user.role?.toLowerCase() || 'staff'}
+                        </Tag>
+                        {user.isActive && (
+                          <Tag 
+                            color="success"
+                            style={{ 
+                              borderRadius: '4px',
+                              backgroundColor: '#52c41a',
+                              color: '#ffffff',
+                              border: 'none',
+                              fontSize: '14px',
+                            }}
+                          >
+                            Active
+                          </Tag>
+                        )}
+                      </Space>
+                    </div>
+
+                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <MailOutlined style={{ color: '#6b7280', fontSize: '16px' }} />
+                        <Text style={{ fontSize: '15px', color: '#6b7280' }}>
+                          {user.email}
+                        </Text>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <CalendarOutlined style={{ color: '#6b7280', fontSize: '16px' }} />
+                        <Text style={{ fontSize: '15px', color: '#6b7280' }}>
+                          Created: {formatDate(user.createdAt)}
+                        </Text>
+                      </div>
+                      {user.updatedAt && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <UserOutlined style={{ color: '#6b7280', fontSize: '16px' }} />
+                          <Text style={{ fontSize: '15px', color: '#6b7280' }}>
+                            Last login: {formatDateTime(user.updatedAt)}
+                          </Text>
+                        </div>
+                      )}
+                    </Space>
+
+                    {!user.isActive && (
+                      <div style={{ marginTop: '12px', textAlign: 'right' }}>
+                        <Button
+                          danger
+                          icon={<StopOutlined />}
+                          onClick={() => handleToggleActive(user.id, user.isActive)}
+                          style={{
+                            backgroundColor: '#f5222d',
+                            borderColor: '#f5222d',
+                            color: '#ffffff',
+                            fontSize: '16px',
+                          }}
+                        >
+                          Deactivate
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
+
+      {data.length === 0 && !loading && (
+        <div style={{ textAlign: 'center', padding: '50px', color: '#9ca3af' }}>
+          No staff members found
+        </div>
+      )}
 
       <StaffFormModal
         visible={modalVisible}

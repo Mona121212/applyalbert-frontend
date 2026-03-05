@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Form, Input, Button, Card, Typography, Alert, Space } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Card, Typography, Alert, Space, Divider } from 'antd';
+import { UserOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
 import { authService } from '../../services/auth.service';
 import { useAuthStore } from '../../store/auth.store';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 /**
  * Login form schema using Zod
@@ -19,7 +19,7 @@ const loginSchema = z.object({
     .string()
     .min(1, 'Email is required')
     .email('Invalid email format')
-    .max(255, 'Email must be less than 255 characters'),
+    .max(255, 'Email must be less than 255 caracters'),
   password: z
     .string()
     .min(1, 'Password is required')
@@ -62,7 +62,7 @@ export default function LoginPage() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      email: 'admin@applyalberta.ca',
       password: '',
       totpCode: undefined,
     },
@@ -78,7 +78,7 @@ export default function LoginPage() {
 
     try {
       // Real backend API call
-      const loginResponse = await authService.login({
+      await authService.login({
         email: data.email,
         password: data.password,
         totpCode: data.totpCode && data.totpCode.trim() !== '' ? data.totpCode : undefined,
@@ -130,9 +130,8 @@ export default function LoginPage() {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#e6f2ff',
         padding: '20px',
-        background: 'linear-gradient(135deg, #f5f5f5 0%, #e5e7eb 100%)',
       }}
     >
       <Card
@@ -141,7 +140,8 @@ export default function LoginPage() {
           maxWidth: 440,
           borderRadius: '12px',
           boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-          border: '1px solid #e5e7eb',
+          border: 'none',
+          backgroundColor: '#ffffff',
         }}
         styles={{
           body: {
@@ -151,20 +151,20 @@ export default function LoginPage() {
       >
         <Space orientation="vertical" size="large" style={{ width: '100%' }}>
           <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-            <div style={{ 
-              fontSize: '28px', 
-              fontWeight: 600, 
-              color: '#003366',
-              marginBottom: '8px',
-            }}>
-              ApplyAlberta
+            <div
+              style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                backgroundColor: '#722ed1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 24px',
+              }}
+            >
+              <SafetyOutlined style={{ fontSize: '32px', color: '#ffffff' }} />
             </div>
-            <Title level={2} style={{ marginBottom: '4px', color: '#003366' }}>
-              Admin Login
-            </Title>
-            <Text type="secondary" style={{ fontSize: '14px' }}>
-              Sign in to your admin account
-            </Text>
           </div>
 
           {error && (
@@ -184,7 +184,7 @@ export default function LoginPage() {
             autoComplete="off"
           >
             <Form.Item
-              label="Email"
+              label={<span style={{ color: '#1f2937', fontWeight: 500 }}>Email Address</span>}
               validateStatus={errors.email ? 'error' : ''}
               help={errors.email?.message}
             >
@@ -203,7 +203,7 @@ export default function LoginPage() {
             </Form.Item>
 
             <Form.Item
-              label="Password"
+              label={<span style={{ color: '#1f2937', fontWeight: 500 }}>Password</span>}
               validateStatus={errors.password ? 'error' : ''}
               help={errors.password?.message}
             >
@@ -251,14 +251,42 @@ export default function LoginPage() {
                   height: '44px',
                   fontSize: '16px',
                   fontWeight: 500,
-                  background: '#003366',
-                  borderColor: '#003366',
+                  background: '#722ed1',
+                  borderColor: '#722ed1',
                 }}
               >
-                {loading ? 'Logging in...' : 'Login'}
+                {loading ? 'Logging in...' : 'Continue'}
               </Button>
             </Form.Item>
           </Form>
+
+          <Divider style={{ margin: '24px 0' }} />
+
+          <div style={{ marginTop: '16px' }}>
+            <Text strong style={{ color: '#1f2937', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+              Default Credentials:
+            </Text>
+            <Text style={{ color: '#6b7280', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+              Admin: admin@applyalberta.ca / admin
+            </Text>
+            <Text style={{ color: '#6b7280', fontSize: '13px', display: 'block', fontStyle: 'italic' }}>
+              Note: Use backend API credentials. TOTP is optional if enabled.
+            </Text>
+          </div>
+
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            marginTop: '24px',
+            paddingTop: '16px',
+            borderTop: '1px solid #e5e7eb'
+          }}>
+            <LockOutlined style={{ fontSize: '14px', color: '#6b7280', marginRight: '6px' }} />
+            <Text style={{ color: '#6b7280', fontSize: '12px' }}>
+              Secured with multi-factor authentication
+            </Text>
+          </div>
         </Space>
       </Card>
     </div>

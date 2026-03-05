@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Form, Input, Button, Select, Switch, message, Space, Spin, Tabs } from 'antd';
+import { Card, Form, Input, Button, Switch, message, Space, Spin, Tabs, Tooltip } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -240,6 +241,41 @@ export default function ProgramEditPage() {
     // New program: only show Basic Info tab
     return (
       <div>
+        <div style={{ marginBottom: '20px' }}>
+          <Tooltip title="Back to Programs">
+            <Button
+              type="default"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate('/staff/programs')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '40px',
+                height: '40px',
+                padding: 0,
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+                backgroundColor: '#ffffff',
+                color: '#003366',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f9fafb';
+                e.currentTarget.style.borderColor = '#003366';
+                e.currentTarget.style.color = '#004d99';
+                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 51, 102, 0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#ffffff';
+                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.color = '#003366';
+                e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
+              }}
+            />
+          </Tooltip>
+        </div>
         <Card
           title="Create Program - Basic Info"
           extra={
@@ -283,6 +319,41 @@ export default function ProgramEditPage() {
   // Edit mode: show Tabs
   return (
     <div>
+      <div style={{ marginBottom: '20px' }}>
+        <Tooltip title="Back to Programs">
+          <Button
+            type="default"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate('/staff/programs')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '40px',
+              height: '40px',
+              padding: 0,
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              backgroundColor: '#ffffff',
+              color: '#003366',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f9fafb';
+              e.currentTarget.style.borderColor = '#003366';
+              e.currentTarget.style.color = '#004d99';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 51, 102, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ffffff';
+              e.currentTarget.style.borderColor = '#e5e7eb';
+              e.currentTarget.style.color = '#003366';
+              e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
+            }}
+          />
+        </Tooltip>
+      </div>
       <Card
         title={isEdit ? 'Edit Program' : 'Create Program'}
         extra={
